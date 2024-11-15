@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR.InteractionSystem;
 
+
 public class Throwable : MonoBehaviour
 {
     private Rigidbody rb;
@@ -20,7 +21,9 @@ public class Throwable : MonoBehaviour
     private void HandHoverUpdate(Hand hand)
     {
         if (hand.GetGrabStarting() != GrabTypes.None)
+        // if (Input.GetKeyDown(KeyCode.Space))
         {
+            Debug.Log("Space"); 
             hand.AttachObject(gameObject, GrabTypes.Grip);
             isAttached = true;
             attachedHand = hand;
@@ -55,6 +58,6 @@ public class Throwable : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+       
     }
 }
