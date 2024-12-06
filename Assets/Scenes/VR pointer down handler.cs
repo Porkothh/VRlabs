@@ -3,110 +3,78 @@ using System.Collections.Generic;
 using UnityEngine;
 using Valve.VR;
 
+
+
 public class VRPointerDownHandler : MonoBehaviour
 {
-    // public Transform nextSphere;
-    // public GameObject arrow;
-
-    // Массив сфер и их соответствующих курсоров
     [System.Serializable]
-    public class SphereData
+    public class SphereArrowMapping 
     {
-        public Transform sphere;  // Целевая сфера
-        public GameObject arrow;  // Курсор для перехода
+        public Transform sphere;
+        public GameObject arrow;
     }
+    public SphereArrowMapping[] mappings;
 
-    public SphereData[] spheres;  // Массив сфер с курсорами
     public SteamVR_Input_Sources handType;
     public SteamVR_Action_Boolean triggerAction;
 
-    GameObject m_Space;
-
-    bool changing = false;
-
     private Transform player;
+    private int currentMappingIndex = 0;
 
     void Start()
     {
-      
         player = Camera.main.transform.parent;
-        Debug.LogError("find player");
-        if (player == null)
-        {
-            Debug.LogError("can't find player");
-        }
+        MovePlayerToSphere(currentMappingIndex);
+        MoveArrowToSphere(currentMappingIndex);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Проверяем, что объект, с которым столкнулись, - это рука (или контроллер)
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") && triggerAction.GetStateDown(handType))
         {
-            // Проверяем, нажата ли кнопка на контроллере
-            if (triggerAction.GetStateDown(handType))
-            {
-                 // Используем луч для определения, какой курсор был активирован
-            Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-            RaycastHit hit;
-
-            if (Physics.Raycast(ray, out hit))
-            {
-                foreach (SphereData sphereData in spheres)
-                {
-                    if (hit.collider != null && hit.collider.gameObject == sphereData.arrow)
-                    {
-                        Debug.Log($"Arrow selected: {sphereData.arrow.name}");
-                        ChangeSphere(sphereData.sphere);
-                        return;
-                    }
-                }
-            }
-                // ChangeSphere(nextSphere);
-                
-            }
+            ChangeSphere();
         }
     }
 
     void Update()
     {
-        // Вызываем проверку состояния кнопки в методе Update()
         if (triggerAction.GetStateDown(handType))
         {
-             // Используем луч для определения, какой курсор был активирован
-        Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
-        {
-            foreach (SphereData sphereData in spheres)
-            {
-                if (hit.collider != null && hit.collider.gameObject == sphereData.arrow)
-                {
-                    Debug.Log($"Arrow selected: {sphereData.arrow.name}");
-                    ChangeSphere(sphereData.sphere);
-                    return;
-                }
-            }
-        }
-            // ChangeSphere(nextSphere);
-            // Дополнительные действия при нажатии кнопки (если нужно)
+            ChangeSphere();
             Debug.Log("Trigger button pressed");
         }
     }
 
-    public void ChangeSphere(Transform nextSphere)
+    public void ChangeSphere()
     {
-        Debug.LogError("find player3");
-        if (nextSphere != null)
+        currentMappingIndex = (currentMappingIndex + 1) % mappings.Length;
+        MovePlayerToSphere(currentMappingIndex);
+        MoveArrowToSphere(currentMappingIndex);
+    }
+
+    private void MovePlayerToSphere(int index)
+    {
+        if (index >= 0 && index < mappings.Length)
         {
-            player.position = nextSphere.position;
-            Debug.Log("Player transformed to " + nextSphere.name);
+            player.position = mappings[index].sphere.position;
+            Debug.Log("Player moved to " + mappings[index].sphere.name);
         }
         else
         {
-            Debug.LogWarning("Sphere not inserted");
+            Debug.LogWarning("Index out of range.");
         }
     }
 
-    
+    private void MoveArrowToSphere(int index)
+    {
+        if (index >= 0 && index < mappings.Length)
+        {
+            mappings[index].arrow.transform.position = mappings[index].sphere.position;
+            Debug.Log("Arrow moved to " + mappings[index].sphere.name);
+        }
+        else
+        {
+            Debug.LogWarning("Index out of range.");
+        }
+    }
 }
